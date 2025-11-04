@@ -13,11 +13,12 @@ COPY prisma ./prisma
 # Copy package-lock.json if it exists (optional)
 COPY package-lock.json* ./
 
-# Install dependencies (use npm ci if lock file exists, otherwise npm install)
+# Install ALL dependencies (including dev dependencies for building)
+# We need dev dependencies (like TypeScript) to build the project
 RUN if [ -f package-lock.json ]; then \
-      npm ci --omit=dev && npm cache clean --force; \
+      npm ci && npm cache clean --force; \
     else \
-      npm install --omit=dev && npm cache clean --force; \
+      npm install && npm cache clean --force; \
     fi
 
 # Generate Prisma client
@@ -26,7 +27,7 @@ RUN npx prisma generate
 # Copy source code
 COPY . .
 
-# Build TypeScript
+# Build TypeScript (requires TypeScript from dev dependencies)
 RUN npm run build
 
 # Stage 2: Production
