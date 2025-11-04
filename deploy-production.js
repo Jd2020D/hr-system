@@ -14,12 +14,12 @@ function run(cmd, options = {}) {
     }
 }
 
-function createNginxProxyConfig(domain, containerPort, isApi = false, apiPort = '4000') {
+function createNginxProxyConfig(domain, containerPort, isApi = false, apiPort = '4000', withSSL = true) {
     const apiPrefix = isApi ? '/api' : '';
 
     return `
 server {
-    listen 443 ssl http2;
+    ${withSSL ? 'listen 443 ssl http2;' : 'listen 80;'}
     server_name ${domain};
     client_max_body_size 50M;
 
@@ -76,10 +76,19 @@ server {
     }
     `}
 
+    ${withSSL ? `
     ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ` : ''}
+    
+    ${!withSSL ? `
+    # Let's Encrypt challenge (for HTTP-only config)
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    ` : ''}
     
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -87,6 +96,7 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
 }
 
+${withSSL ? `
 server {
     listen 80;
     server_name ${domain};
@@ -100,6 +110,7 @@ server {
         return 301 https://${domain}$request_uri;
     }
 }
+` : ''}
   `.trim();
 }
 
@@ -294,8 +305,9 @@ function main() {
         // 9. Seed database (only if empty - check if admin user exists)
         console.log('\n🌱 Checking if database needs seeding...');
         try {
-            // Try using npx prisma db seed which handles tsx internally
-            run(`cd ${appDir} && docker compose -f docker-compose.prod.yml exec -T api npx prisma db seed`, { stdio: 'inherit' });
+            // Try using node to run compiled seed file, or use npx to install tsx temporarily
+            // First try to run with node if seed.js exists, otherwise use npx tsx
+            run(`cd ${appDir} && docker compose -f docker-compose.prod.yml exec -T api sh -c "if [ -f prisma/seed.js ]; then node prisma/seed.js; else npx -y tsx prisma/seed.ts; fi"`, { stdio: 'inherit' });
         } catch (e) {
             console.log('ℹ️  Database already has data or seeding failed, continuing...');
         }
@@ -306,27 +318,29 @@ function main() {
         // Ensure nginx conf.d directory exists
         run(`mkdir -p /etc/nginx/conf.d || true`);
 
+        // Create HTTP-only config first (for certbot to work)
+        console.log('📝 Creating initial HTTP-only Nginx config...');
         if (sameDomain) {
             console.log(`📝 Same domain detected. Creating unified config for ${frontendDomain}...`);
-            // Single Nginx config for same domain (frontend + /api proxy)
-            const unifiedNginxConf = createNginxProxyConfig(frontendDomain, webPort, false, apiPort);
+            // Single Nginx config for same domain (frontend + /api proxy) - HTTP only first
+            const unifiedNginxConf = createNginxProxyConfig(frontendDomain, webPort, false, apiPort, false);
             fs.writeFileSync(`/etc/nginx/conf.d/${frontendDomain}.conf`, unifiedNginxConf);
         } else {
             console.log(`📝 Separate domains. Creating configs for ${frontendDomain} and ${apiDomain}...`);
-            // Frontend Nginx config
-            const frontendNginxConf = createNginxProxyConfig(frontendDomain, webPort, false, apiPort);
+            // Frontend Nginx config - HTTP only first
+            const frontendNginxConf = createNginxProxyConfig(frontendDomain, webPort, false, apiPort, false);
             fs.writeFileSync(`/etc/nginx/conf.d/${frontendDomain}.conf`, frontendNginxConf);
 
-            // API Nginx config
-            const apiNginxConf = createNginxProxyConfig(apiDomain, apiPort, true, apiPort);
+            // API Nginx config - HTTP only first
+            const apiNginxConf = createNginxProxyConfig(apiDomain, apiPort, true, apiPort, false);
             fs.writeFileSync(`/etc/nginx/conf.d/${apiDomain}.conf`, apiNginxConf);
         }
 
         // Remove default nginx config if it exists
         run(`rm -f /etc/nginx/conf.d/default.conf || true`);
 
-        // 11. Test Nginx configuration
-        console.log('\n🧪 Testing Nginx configuration...');
+        // 11. Test Nginx configuration (HTTP only)
+        console.log('\n🧪 Testing Nginx configuration (HTTP only)...');
         run(`nginx -t`);
 
         // 12. Reload Nginx
@@ -343,20 +357,38 @@ function main() {
             run(`apt-get update && apt-get install -y certbot python3-certbot-nginx`);
         }
 
-        // Get SSL certificates
+        // Get SSL certificates (certbot will modify the config)
         if (sameDomain) {
             console.log(`📜 Obtaining SSL certificate for ${frontendDomain}...`);
-            run(`certbot --nginx -d ${frontendDomain} --non-interactive --agree-tos --email ${certbotEmail} --redirect`);
+            try {
+                run(`certbot --nginx -d ${frontendDomain} --non-interactive --agree-tos --email ${certbotEmail} --redirect`);
+            } catch (e) {
+                console.log('⚠️  Certbot failed, regenerating config with SSL manually...');
+                // Regenerate config with SSL enabled
+                const unifiedNginxConfSSL = createNginxProxyConfig(frontendDomain, webPort, false, apiPort, true);
+                fs.writeFileSync(`/etc/nginx/conf.d/${frontendDomain}.conf`, unifiedNginxConfSSL);
+            }
         } else {
             console.log(`📜 Obtaining SSL certificate for ${frontendDomain}...`);
-            run(`certbot --nginx -d ${frontendDomain} --non-interactive --agree-tos --email ${certbotEmail} --redirect`);
-
+            try {
+                run(`certbot --nginx -d ${frontendDomain} --non-interactive --agree-tos --email ${certbotEmail} --redirect`);
+            } catch (e) {
+                console.log('⚠️  Certbot failed for frontend, regenerating config with SSL manually...');
+                const frontendNginxConfSSL = createNginxProxyConfig(frontendDomain, webPort, false, apiPort, true);
+                fs.writeFileSync(`/etc/nginx/conf.d/${frontendDomain}.conf`, frontendNginxConfSSL);
+            }
             console.log(`📜 Obtaining SSL certificate for ${apiDomain}...`);
-            run(`certbot --nginx -d ${apiDomain} --non-interactive --agree-tos --email ${certbotEmail} --redirect`);
+            try {
+                run(`certbot --nginx -d ${apiDomain} --non-interactive --agree-tos --email ${certbotEmail} --redirect`);
+            } catch (e) {
+                console.log('⚠️  Certbot failed for API, regenerating config with SSL manually...');
+                const apiNginxConfSSL = createNginxProxyConfig(apiDomain, apiPort, true, apiPort, true);
+                fs.writeFileSync(`/etc/nginx/conf.d/${apiDomain}.conf`, apiNginxConfSSL);
+            }
         }
 
         // 14. Final Nginx test & reload
-        console.log('\n🔍 Final Nginx configuration test...');
+        console.log('\n🔍 Final Nginx configuration test (with SSL)...');
         run(`nginx -t`);
         run(`systemctl reload nginx`);
 
