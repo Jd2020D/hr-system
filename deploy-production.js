@@ -167,7 +167,7 @@ function main() {
 
     // Parse arguments
     // Usage: sudo node deploy-production.js <repo_url> <frontend_domain> <api_domain> <api_port> [branch] [email]
-    const [, , repo, frontendDomain, apiDomain, apiPort = '4000', branch = 'main', email] = process.argv;
+    let [, , repo, frontendDomain, apiDomain, apiPort = '4000', branch = 'main', email] = process.argv;
 
     if (!repo || !frontendDomain || !apiDomain || !apiPort) {
         console.error('Usage: sudo node deploy-production.js <github_repo_url> <frontend_domain> <api_domain> <api_port> [branch] [email]');
@@ -190,7 +190,7 @@ function main() {
     }
 
     const appDir = `/var/www/hr-system`;
-    const webPort = process.env.WEB_PORT || '4001'; // Frontend port (default: 4001)
+    let webPort = process.env.WEB_PORT || '4001'; // Frontend port (default: 4001) - will be updated from .env
     const certbotEmail = email || `admin@${frontendDomain.split('.')[0]}.com`;
     const sameDomain = frontendDomain === apiDomain;
 
@@ -257,8 +257,11 @@ function main() {
         // Override URLs with provided domains
         process.env.FRONTEND_URL = `https://${frontendDomain}`;
         process.env.API_BASE_URL = `https://${apiDomain}`;
-        process.env.API_PORT = envVars.API_PORT || apiPort; // Use from .env.production, then command line arg, then default
-        process.env.WEB_PORT = envVars.WEB_PORT || webPort; // Use from .env.production or default
+        // Use ports from .env.production, then command line arg, then default
+        apiPort = envVars.API_PORT || apiPort; // Update apiPort variable from .env
+        webPort = envVars.WEB_PORT || webPort; // Update webPort variable from .env
+        process.env.API_PORT = apiPort;
+        process.env.WEB_PORT = webPort;
 
         // 4. Build Docker images
         console.log('\n🔨 Building Docker images...');
