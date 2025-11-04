@@ -246,7 +246,7 @@ function main() {
         // Override URLs with provided domains
         process.env.FRONTEND_URL = `https://${frontendDomain}`;
         process.env.API_BASE_URL = `https://${apiDomain}`;
-        process.env.API_PORT = apiPort;
+        process.env.API_PORT = envVars.API_PORT || apiPort; // Use from .env.production, then command line arg, then default
         process.env.WEB_PORT = envVars.WEB_PORT || webPort; // Use from .env.production or default
 
         // 4. Build Docker images
