@@ -318,6 +318,15 @@ function main() {
         // Ensure nginx conf.d directory exists
         run(`mkdir -p /etc/nginx/conf.d || true`);
 
+        // Remove any existing configs for these domains to avoid conflicts
+        console.log('🧹 Cleaning up any existing Nginx configs...');
+        if (sameDomain) {
+            run(`rm -f /etc/nginx/conf.d/${frontendDomain}.conf || true`);
+        } else {
+            run(`rm -f /etc/nginx/conf.d/${frontendDomain}.conf || true`);
+            run(`rm -f /etc/nginx/conf.d/${apiDomain}.conf || true`);
+        }
+
         // Create HTTP-only config first (for certbot to work)
         console.log('📝 Creating initial HTTP-only Nginx config...');
         if (sameDomain) {
