@@ -517,7 +517,7 @@ export const projectService = {
   // ===== PROJECT SUMMARY =====
   async getSummary(projectId: string) {
     const project = await prisma.project.findUnique({
-      where: { id },
+      where: { id: projectId },
       include: {
         expenses: true,
         invoices: true,
