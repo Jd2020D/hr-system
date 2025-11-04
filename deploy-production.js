@@ -303,32 +303,27 @@ function main() {
         // 10. Setup Nginx configurations
         console.log('\n🌐 Setting up Nginx reverse proxy...');
 
-        // Ensure nginx directories exist
-        run(`mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled || true`);
+        // Ensure nginx conf.d directory exists
+        run(`mkdir -p /etc/nginx/conf.d || true`);
 
         if (sameDomain) {
             console.log(`📝 Same domain detected. Creating unified config for ${frontendDomain}...`);
             // Single Nginx config for same domain (frontend + /api proxy)
             const unifiedNginxConf = createNginxProxyConfig(frontendDomain, webPort, false, apiPort);
-            fs.writeFileSync(`/etc/nginx/sites-available/${frontendDomain}`, unifiedNginxConf);
-            run(`ln -sf /etc/nginx/sites-available/${frontendDomain} /etc/nginx/sites-enabled/${frontendDomain} || true`);
+            fs.writeFileSync(`/etc/nginx/conf.d/${frontendDomain}.conf`, unifiedNginxConf);
         } else {
             console.log(`📝 Separate domains. Creating configs for ${frontendDomain} and ${apiDomain}...`);
             // Frontend Nginx config
             const frontendNginxConf = createNginxProxyConfig(frontendDomain, webPort, false, apiPort);
-            fs.writeFileSync(`/etc/nginx/sites-available/${frontendDomain}`, frontendNginxConf);
+            fs.writeFileSync(`/etc/nginx/conf.d/${frontendDomain}.conf`, frontendNginxConf);
 
             // API Nginx config
             const apiNginxConf = createNginxProxyConfig(apiDomain, apiPort, true, apiPort);
-            fs.writeFileSync(`/etc/nginx/sites-available/${apiDomain}`, apiNginxConf);
-
-            // Enable sites
-            run(`ln -sf /etc/nginx/sites-available/${frontendDomain} /etc/nginx/sites-enabled/${frontendDomain} || true`);
-            run(`ln -sf /etc/nginx/sites-available/${apiDomain} /etc/nginx/sites-enabled/${apiDomain} || true`);
+            fs.writeFileSync(`/etc/nginx/conf.d/${apiDomain}.conf`, apiNginxConf);
         }
 
-        // Remove default nginx site if it exists
-        run(`rm -f /etc/nginx/sites-enabled/default || true`);
+        // Remove default nginx config if it exists
+        run(`rm -f /etc/nginx/conf.d/default.conf || true`);
 
         // 11. Test Nginx configuration
         console.log('\n🧪 Testing Nginx configuration...');
