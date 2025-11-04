@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50" width="180" height="50">
+  <defs>
+    <style>
+      .ora-text { fill: #DC2626; font-family: 'Arial', 'Helvetica', sans-serif; font-weight: 700; font-size: 36px; letter-spacing: 1px; }
+      .pex-text { fill: #000000; font-family: 'Arial', 'Helvetica', sans-serif; font-weight: 700; font-size: 36px; letter-spacing: 1px; }
+    </style>
+  </defs>
+  
+  <!-- OR -->
+  <text x="0" y="38" class="ora-text">OR</text>
+  
+  <!-- Stylized A as triangle with red line -->
+  <g transform="translate(60, 10)">
+    <!-- Black triangle (A) -->
+    <path d="M 0 28 L 14 0 L 28 28 Z" fill="#000000"/>
+    <!-- Red diagonal line cutting through the triangle -->
+    <line x1="4" y1="26" x2="24" y2="4" stroke="#DC2626" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+  
+  <!-- PEX -->
+  <text x="98" y="38" class="pex-text">PEX</text>
+</svg>

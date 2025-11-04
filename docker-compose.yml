@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hr-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: hr_system
+      MYSQL_USER: hruser
+      MYSQL_PASSWORD: hrpass
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./apps/api/prisma/schema.prisma:/docker-entrypoint-initdb.d/schema.prisma
+    networks:
+      - hr-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: hr-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: mysql://hruser:hrpass@mysql:3306/hr_system
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production-min-32-chars-change-it
+      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production-min-32-chars-change-it
+      FRONTEND_URL: http://localhost:5174
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+      - api_uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - hr-network
+    command: npm run dev
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: hr-web
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:4000
+      VITE_APP_NAME: HR Management System
+    ports:
+      - '5174:5174'
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - hr-network
+    command: npm run dev -- --host 0.0.0.0
+
+  adminer:
+    image: adminer:latest
+    container_name: hr-adminer
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    networks:
+      - hr-network
+
+networks:
+  hr-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  api_uploads:
+
