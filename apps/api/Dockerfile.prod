@@ -6,12 +6,19 @@ WORKDIR /app
 # Install OpenSSL and dependencies for Prisma
 RUN apk add --no-cache openssl openssl-dev libc6-compat
 
-# Copy package files
-COPY package*.json ./
+# Copy package.json first (required)
+COPY package.json ./
 COPY prisma ./prisma
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Copy package-lock.json if it exists (optional)
+COPY package-lock.json* ./
+
+# Install dependencies (use npm ci if lock file exists, otherwise npm install)
+RUN if [ -f package-lock.json ]; then \
+      npm ci --omit=dev && npm cache clean --force; \
+    else \
+      npm install --omit=dev && npm cache clean --force; \
+    fi
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -30,12 +37,19 @@ WORKDIR /app
 # Install OpenSSL for Prisma runtime
 RUN apk add --no-cache openssl openssl-dev libc6-compat
 
-# Copy package files
-COPY package*.json ./
+# Copy package.json first (required)
+COPY package.json ./
 COPY prisma ./prisma
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Copy package-lock.json if it exists (optional)
+COPY package-lock.json* ./
+
+# Install only production dependencies (use npm ci if lock file exists, otherwise npm install)
+RUN if [ -f package-lock.json ]; then \
+      npm ci --omit=dev && npm cache clean --force; \
+    else \
+      npm install --omit=dev && npm cache clean --force; \
+    fi
 
 # Generate Prisma client
 RUN npx prisma generate
