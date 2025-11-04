@@ -116,7 +116,7 @@ FRONTEND_URL=https://CHANGE_ME_FRONTEND_DOMAIN
 API_BASE_URL=https://CHANGE_ME_API_DOMAIN
 
 # Ports (Internal - Nginx will proxy)
-WEB_PORT=80
+WEB_PORT=4001
 API_PORT=4000
 
 # JWT Secrets (Generate with: openssl rand -base64 32)
@@ -179,7 +179,7 @@ function main() {
     }
 
     const appDir = `/var/www/hr-system`;
-    const webPort = '80';
+    const webPort = process.env.WEB_PORT || '4001'; // Frontend port (default: 4001)
     const certbotEmail = email || `admin@${frontendDomain.split('.')[0]}.com`;
     const sameDomain = frontendDomain === apiDomain;
 
@@ -247,7 +247,7 @@ function main() {
         process.env.FRONTEND_URL = `https://${frontendDomain}`;
         process.env.API_BASE_URL = `https://${apiDomain}`;
         process.env.API_PORT = apiPort;
-        process.env.WEB_PORT = webPort;
+        process.env.WEB_PORT = envVars.WEB_PORT || webPort; // Use from .env.production or default
 
         // 4. Build Docker images
         console.log('\n🔨 Building Docker images...');
