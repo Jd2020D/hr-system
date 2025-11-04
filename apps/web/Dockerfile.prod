@@ -20,9 +20,8 @@ RUN if [ -f package-lock.json ]; then \
 COPY . .
 
 # Build the application
-# Ignore TypeScript errors but ensure build completes
-RUN npx tsc --skipLibCheck --noEmitOnError false 2>/dev/null || true
-RUN npm run build
+# Skip TypeScript check and run vite build directly (Vite handles TypeScript transpilation)
+RUN npx vite build
 
 # Stage 2: Production with Nginx
 FROM nginx:alpine
