@@ -294,13 +294,17 @@ function main() {
         // 9. Seed database (only if empty - check if admin user exists)
         console.log('\n🌱 Checking if database needs seeding...');
         try {
-            run(`cd ${appDir} && docker compose -f docker-compose.prod.yml exec -T api npm run seed`, { stdio: 'inherit' });
+            // Try using npx prisma db seed which handles tsx internally
+            run(`cd ${appDir} && docker compose -f docker-compose.prod.yml exec -T api npx prisma db seed`, { stdio: 'inherit' });
         } catch (e) {
             console.log('ℹ️  Database already has data or seeding failed, continuing...');
         }
 
         // 10. Setup Nginx configurations
         console.log('\n🌐 Setting up Nginx reverse proxy...');
+
+        // Ensure nginx directories exist
+        run(`mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled || true`);
 
         if (sameDomain) {
             console.log(`📝 Same domain detected. Creating unified config for ${frontendDomain}...`);
