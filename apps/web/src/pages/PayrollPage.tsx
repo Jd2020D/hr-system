@@ -110,7 +110,7 @@ const PayrollPage = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-600">Loading payroll runs...</div>;
+    return <div className="text-center py-8 text-gray-600 dark:text-gray-300">Loading payroll runs...</div>;
   }
 
   const runs = data || [];
@@ -125,24 +125,24 @@ const PayrollPage = () => {
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Runs</h3>
-          <p className="text-2xl font-bold text-primary-600">{runs.length}</p>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Total Runs</h3>
+          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{runs.length}</p>
         </div>
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Draft</h3>
-          <p className="text-2xl font-bold text-yellow-600">
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Draft</h3>
+          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
             {runs.filter((r: any) => r.status === 'DRAFT').length}
           </p>
         </div>
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Approved</h3>
-          <p className="text-2xl font-bold text-blue-600">
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Approved</h3>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {runs.filter((r: any) => r.status === 'APPROVED').length}
           </p>
         </div>
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Paid</h3>
-          <p className="text-2xl font-bold text-green-600">
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Paid</h3>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
             {runs.filter((r: any) => r.status === 'PAID').length}
           </p>
         </div>
@@ -152,7 +152,7 @@ const PayrollPage = () => {
       <div className="card">
         <h2 className="text-xl font-bold mb-4">Payroll Runs</h2>
         {runs.length === 0 ? (
-          <div className="text-center py-8 text-gray-600">
+          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
             <p className="mb-4">No payroll runs found</p>
             <button onClick={handleCreate} className="btn-primary">Create First Payroll Run</button>
           </div>
@@ -174,7 +174,7 @@ const PayrollPage = () => {
                 {runs.map((run: any) => {
                   const totals = calculateTotals(run.items || []);
                   return (
-                    <tr key={run.id} className="border-b hover:bg-gray-50">
+                    <tr key={run.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="py-3 px-4">{format(new Date(run.periodStart), 'MMM yyyy')}</td>
                       <td className="py-3 px-4">{format(new Date(run.periodStart), 'MMM dd, yyyy')}</td>
                       <td className="py-3 px-4">{format(new Date(run.periodEnd), 'MMM dd, yyyy')}</td>
@@ -195,7 +195,7 @@ const PayrollPage = () => {
                         <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => handleView(run)}
-                            className="text-primary-600 hover:text-primary-800 text-sm"
+                            className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 text-sm"
                           >
                             View
                           </button>
@@ -206,7 +206,7 @@ const PayrollPage = () => {
                                   prepareMutation.mutate(run.id);
                                 }
                               }}
-                              className="text-orange-600 hover:text-orange-800 text-sm"
+                              className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 text-sm"
                             >
                               Prepare
                             </button>
@@ -218,7 +218,7 @@ const PayrollPage = () => {
                                   approveMutation.mutate(run.id);
                                 }
                               }}
-                              className="text-green-600 hover:text-green-800 text-sm"
+                              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
                             >
                               Approve
                             </button>
@@ -230,7 +230,7 @@ const PayrollPage = () => {
                                   payMutation.mutate(run.id);
                                 }
                               }}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                             >
                               Mark Paid
                             </button>
@@ -249,38 +249,38 @@ const PayrollPage = () => {
       {/* Create Payroll Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Create Payroll Run</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full transition-colors">
+            <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">Create Payroll Run</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Start Date *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Start Date *</label>
                   <input
                     type="date"
                     required
                     value={formData.periodStart}
                     onChange={(e) => setFormData({ ...formData, periodStart: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">End Date *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">End Date *</label>
                   <input
                     type="date"
                     required
                     value={formData.periodEnd}
                     onChange={(e) => setFormData({ ...formData, periodEnd: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Notes (Optional)</label>
+                <label className="block text-sm font-medium mb-1 dark:text-gray-300">Notes (Optional)</label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="input"
                   placeholder="Add any notes for this payroll run..."
                 />
               </div>
@@ -308,20 +308,20 @@ const PayrollPage = () => {
       {/* View Payroll Details Modal */}
       {showViewModal && selectedRun && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">Payroll Details</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors">
+            <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">Payroll Details</h2>
             
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Period</p>
-                  <p className="font-semibold">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Period</p>
+                  <p className="font-semibold dark:text-gray-100">
                     {format(new Date(selectedRun.periodStart), 'MMM dd, yyyy')} - 
                     {format(new Date(selectedRun.periodEnd), 'MMM dd, yyyy')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Status</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Status</p>
                   <p>
                     <span className={
                       selectedRun.status === 'PAID' ? 'badge-success' :
@@ -333,14 +333,14 @@ const PayrollPage = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Employees</p>
-                  <p className="font-semibold">{selectedRun.items?.length || 0}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Employees</p>
+                  <p className="font-semibold dark:text-gray-100">{selectedRun.items?.length || 0}</p>
                 </div>
               </div>
               {selectedRun.notes && (
                 <div className="mt-4">
-                  <p className="text-sm text-gray-600">Notes</p>
-                  <p className="text-sm">{selectedRun.notes}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Notes</p>
+                  <p className="text-sm dark:text-gray-300">{selectedRun.notes}</p>
                 </div>
               )}
             </div>
@@ -362,7 +362,7 @@ const PayrollPage = () => {
                       {selectedRun.items.map((item: any) => {
                         const currency = item.currency || 'AED';
                         return (
-                          <tr key={item.id} className="border-b hover:bg-gray-50">
+                          <tr key={item.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td className="py-2 px-3">
                               {item.employee 
                                 ? `${item.employee.firstName} ${item.employee.lastName}`
@@ -405,7 +405,7 @@ const PayrollPage = () => {
                 </div>
               </>
             ) : (
-              <div className="text-center py-8 text-gray-600">
+              <div className="text-center py-8 text-gray-600 dark:text-gray-400">
                 <p className="mb-4">No payroll items found</p>
                 {selectedRun.status === 'DRAFT' && (
                   <button

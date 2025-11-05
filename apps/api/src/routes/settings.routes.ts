@@ -31,5 +31,10 @@ router.get('/holidays', settingsController.getHolidays);
 router.post('/holidays', settingsController.createHoliday);
 router.delete('/holidays/:id', settingsController.deleteHoliday);
 
+// SMTP Configuration
+router.get('/smtp', settingsController.getSMTPConfig);
+router.put('/smtp', settingsController.updateSMTPConfig);
+router.post('/smtp/test', settingsController.testSMTPConfig);
+
 export default router;
 

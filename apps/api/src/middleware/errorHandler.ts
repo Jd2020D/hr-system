@@ -26,6 +26,18 @@ export const errorHandler = (
         message: 'Record not found',
       });
     }
+    if (err.code === 'P2021') {
+      return res.status(500).json({
+        success: false,
+        message: 'Database table not found. Please run migrations: npx prisma migrate deploy',
+      });
+    }
+    // Generic Prisma error
+    return res.status(500).json({
+      success: false,
+      message: 'Database error',
+      ...(process.env.NODE_ENV === 'development' && { error: err.message, code: err.code }),
+    });
   }
 
   // Operational errors

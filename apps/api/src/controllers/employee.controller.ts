@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { employeeService } from '../services/employee.service';
 import { paginationSchema, dateRangeSchema } from '../utils/validation';
 import { AuthenticatedRequest } from '../types';
+import { AppError } from '../utils/error';
 
 // Helper to validate date or datetime string
 const dateOrDateTimeSchema = z.string().refine(
@@ -106,6 +107,50 @@ export const employeeController = {
     res.json({
       success: true,
       message: 'Employee updated successfully',
+      data: employee,
+    });
+  },
+
+  // Allow employees to update their own profile (limited fields)
+  async updateMyProfile(req: AuthenticatedRequest, res: Response) {
+    if (!req.user?.employeeId) {
+      throw new AppError(403, 'Employee ID not found');
+    }
+
+    // Only allow updating specific fields for self-service
+    const allowedFields = ['firstName', 'lastName', 'email', 'phone', 'gender', 'dob', 'address', 'nationalId', 'emergencyContact'];
+    const data = updateEmployeeSchema.parse(req.body);
+    
+    // Filter to only allowed fields
+    const filteredData: any = {};
+    allowedFields.forEach(field => {
+      if (data[field as keyof typeof data] !== undefined) {
+        filteredData[field] = data[field as keyof typeof data];
+      }
+    });
+
+    const processedData: any = { ...filteredData };
+    if (filteredData.dob) processedData.dob = new Date(filteredData.dob);
+
+    const employee = await employeeService.update(req.user.employeeId, processedData);
+
+    res.json({
+      success: true,
+      message: 'Your profile has been updated successfully',
+      data: employee,
+    });
+  },
+
+  // Get current user's employee profile
+  async getMyProfile(req: AuthenticatedRequest, res: Response) {
+    if (!req.user?.employeeId) {
+      throw new AppError(403, 'Employee ID not found');
+    }
+
+    const employee = await employeeService.findById(req.user.employeeId);
+
+    res.json({
+      success: true,
       data: employee,
     });
   },

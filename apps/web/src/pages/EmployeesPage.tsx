@@ -55,7 +55,7 @@ const EmployeesPage = () => {
     new Map(
       (data || []).map((emp: Employee) => [emp.department?.id, emp.department])
     ).values()
-  ).filter(Boolean);
+  ).filter((dept): dept is NonNullable<Employee['department']> => Boolean(dept));
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => employeeApi.delete(id),
@@ -266,7 +266,7 @@ const EmployeesPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Loading employees...</div>
+        <div className="text-lg text-gray-600 dark:text-gray-300">Loading employees...</div>
       </div>
     );
   }
@@ -300,7 +300,7 @@ const EmployeesPage = () => {
             </thead>
             <tbody>
               {employees.map((employee: Employee) => (
-                <tr key={employee.id} className="border-b hover:bg-gray-50">
+                <tr key={employee.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="py-3 px-4">{employee.code}</td>
                   <td className="py-3 px-4">{`${employee.firstName} ${employee.lastName}`}</td>
                   <td className="py-3 px-4">{employee.email}</td>
@@ -320,7 +320,7 @@ const EmployeesPage = () => {
                           e.stopPropagation();
                           handleEdit(employee);
                         }}
-                        className="text-primary-600 hover:text-primary-800 mr-3"
+                        className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 mr-3"
                       >
                         Edit
                       </button>
@@ -331,7 +331,7 @@ const EmployeesPage = () => {
                           e.stopPropagation();
                           handleManageSalary(employee);
                         }}
-                        className="text-green-600 hover:text-green-800 mr-3"
+                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 mr-3"
                       >
                         Salary
                       </button>
@@ -342,7 +342,7 @@ const EmployeesPage = () => {
                           e.stopPropagation();
                           handleDelete(employee);
                         }}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         disabled={deleteMutation.isPending}
                       >
                         {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
@@ -359,74 +359,74 @@ const EmployeesPage = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors">
+            <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">
               {editingEmployee ? 'Edit Employee' : 'Add Employee'}
             </h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Employee Code *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Employee Code *</label>
                   <input
                     type="text"
                     required
                     value={formData.code || ''}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                     disabled={!!editingEmployee}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Email *</label>
                   <input
                     type="email"
                     required
                     value={formData.email || ''}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">First Name *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">First Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.firstName || ''}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Last Name *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Last Name *</label>
                   <input
                     type="text"
                     required
                     value={formData.lastName || ''}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Phone</label>
                   <input
                     type="text"
                     value={formData.phone || ''}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Gender</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Gender</label>
                   <select
                     value={formData.gender || ''}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   >
                     <option value="">Select...</option>
                     <option value="Male">Male</option>
@@ -436,51 +436,51 @@ const EmployeesPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Hire Date *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Hire Date *</label>
                   <input
                     type="date"
                     required
                     value={formData.hireDate || ''}
                     onChange={(e) => setFormData({ ...formData, hireDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Department *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Department *</label>
                   <select
                     required
                     value={formData.departmentId || ''}
                     onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   >
                     <option value="">Select Department...</option>
-                    {departments.map((dept) => (
-                      <option key={dept?.id} value={dept?.id}>
-                        {dept?.code} - {dept?.name}
+                    {departments.filter(Boolean).map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.code} - {dept.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Job Title *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Job Title *</label>
                   <input
                     type="text"
                     required
                     value={formData.jobTitle || ''}
                     onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Status *</label>
+                  <label className="block text-sm font-medium mb-1 dark:text-gray-300">Status *</label>
                   <select
                     required
                     value={formData.status || 'ACTIVE'}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="input"
                   >
                     <option value="ACTIVE">Active</option>
                     <option value="INACTIVE">Inactive</option>
@@ -516,9 +516,9 @@ const EmployeesPage = () => {
       {/* Salary Management Modal */}
       {showSalaryModal && selectedEmployeeForSalary && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
+              <h2 className="text-2xl font-bold dark:text-gray-100">
                 Salary Management - {selectedEmployeeForSalary.firstName} {selectedEmployeeForSalary.lastName}
               </h2>
               <button
@@ -527,7 +527,7 @@ const EmployeesPage = () => {
                   setSelectedEmployeeForSalary(null);
                   setShowSalaryForm(false);
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 ✕
               </button>
@@ -565,7 +565,7 @@ const EmployeesPage = () => {
                           const currency = salary.currency || 'AED';
                           const isActive = !salary.effectiveTo || new Date(salary.effectiveTo) > new Date();
                           return (
-                            <tr key={salary.id} className={`border-b ${isActive ? 'bg-green-50' : ''}`}>
+                            <tr key={salary.id} className={`border-b ${isActive ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
                               <td className="py-2 px-3">
                                 {format(new Date(salary.effectiveFrom), 'MMM dd, yyyy')}
                               </td>
@@ -592,7 +592,7 @@ const EmployeesPage = () => {
                                     e.stopPropagation();
                                     handleEditSalary(salary);
                                   }}
-                                  className="text-primary-600 hover:text-primary-800 mr-2 text-sm"
+                                  className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 mr-2 text-sm"
                                 >
                                   Edit
                                 </button>
@@ -603,7 +603,7 @@ const EmployeesPage = () => {
                                     e.stopPropagation();
                                     handleDeleteSalary(salary);
                                   }}
-                                  className="text-red-600 hover:text-red-800 text-sm"
+                                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
                                 >
                                   Delete
                                 </button>
@@ -613,7 +613,7 @@ const EmployeesPage = () => {
                         })
                       ) : (
                         <tr>
-                          <td colSpan={7} className="py-4 text-center text-gray-600">
+                          <td colSpan={7} className="py-4 text-center text-gray-600 dark:text-gray-400">
                             No salary records found
                           </td>
                         </tr>
@@ -624,18 +624,18 @@ const EmployeesPage = () => {
               </>
             ) : (
               <form onSubmit={handleSalarySubmit} className="space-y-4">
-                <h3 className="text-xl font-bold mb-4">
+                <h3 className="text-xl font-bold mb-4 dark:text-gray-100">
                   {editingSalary ? 'Edit Salary' : 'Add Salary'}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Currency *</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Currency *</label>
                     <select
                       required
                       value={salaryFormData.currency || 'AED'}
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, currency: e.target.value as 'USD' | 'JD' | 'AED' })}
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="input"
                     >
                       <option value="USD">USD - US Dollar</option>
                       <option value="JD">JD - Jordanian Dinar</option>
@@ -644,7 +644,7 @@ const EmployeesPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Base Salary *</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Base Salary *</label>
                     <input
                       type="number"
                       step="0.01"
@@ -652,60 +652,60 @@ const EmployeesPage = () => {
                       required
                       value={salaryFormData.baseSalary || ''}
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, baseSalary: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="input"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Allowance</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Allowance</label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
                       value={salaryFormData.allowance || ''}
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, allowance: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="input"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Deduction</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Deduction</label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
                       value={salaryFormData.deduction || ''}
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, deduction: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="input"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Effective From *</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Effective From *</label>
                     <input
                       type="date"
                       required
                       value={salaryFormData.effectiveFrom || ''}
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, effectiveFrom: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="input"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Effective To (Optional)</label>
+                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Effective To (Optional)</label>
                     <input
                       type="date"
                       value={salaryFormData.effectiveTo || ''}
                       onChange={(e) => setSalaryFormData({ ...salaryFormData, effectiveTo: e.target.value || null })}
-                      className="w-full px-3 py-2 border rounded-md"
+                      className="input"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Leave empty for active salary</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave empty for active salary</p>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <p className="text-sm font-medium mb-1">Net Salary Calculation:</p>
-                  <p className="text-lg font-bold text-green-600">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+                  <p className="text-sm font-medium mb-1 dark:text-gray-300">Net Salary Calculation:</p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
                     {((salaryFormData.baseSalary || 0) + (salaryFormData.allowance || 0) - (salaryFormData.deduction || 0)).toFixed(2)} {salaryFormData.currency || 'AED'}
                   </p>
                 </div>

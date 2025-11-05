@@ -9,6 +9,7 @@ import LeavesPage from './pages/LeavesPage';
 import PayrollPage from './pages/PayrollPage';
 import SettingsPage from './pages/SettingsPage';
 import ProjectsPage from './pages/ProjectsPage';
+import EmployeeInfoFormPage from './pages/EmployeeInfoFormPage';
 
 function App() {
   const { isAuthenticated } = useAuthStore();
@@ -30,6 +31,7 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="employees" element={<EmployeesPage />} />
+        <Route path="my-info" element={<EmployeeInfoFormPage />} />
         <Route path="attendance" element={<AttendancePage />} />
         <Route path="leaves" element={<LeavesPage />} />
         <Route path="payroll" element={<PayrollPage />} />

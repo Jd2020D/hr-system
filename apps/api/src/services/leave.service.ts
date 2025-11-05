@@ -3,6 +3,8 @@ import { AppError } from '../utils/error';
 import { Prisma, LeaveRequest, LeaveRequestStatus } from '@prisma/client';
 import { LeaveRequestFilter, PaginatedResult } from '../types';
 import { differenceInDays, isWithinInterval } from 'date-fns';
+import { format } from 'date-fns';
+import { emailService } from './email.service';
 
 export const leaveService = {
   async findAll(filters: LeaveRequestFilter): Promise<PaginatedResult<LeaveRequest>> {
@@ -131,13 +133,30 @@ export const leaveService = {
       throw new AppError(400, 'Insufficient leave balance');
     }
 
-    return prisma.leaveRequest.create({
+    const request = await prisma.leaveRequest.create({
       data: { ...data, days },
       include: {
         employee: true,
         leaveType: true,
       },
     });
+
+    // Send email notification to employee
+    try {
+      await emailService.sendLeaveRequestNotification(
+        request.employee.email,
+        `${request.employee.firstName} ${request.employee.lastName}`,
+        request.leaveType.name,
+        format(request.startDate, 'MMM dd, yyyy'),
+        format(request.endDate, 'MMM dd, yyyy'),
+        request.days
+      );
+    } catch (error) {
+      console.error('Failed to send leave request notification:', error);
+      // Don't fail the request if email fails
+    }
+
+    return request;
   },
 
   async approve(id: string, approverId: string): Promise<LeaveRequest> {
@@ -176,6 +195,22 @@ export const leaveService = {
       },
     });
 
+    // Send email notification to employee
+    try {
+      await emailService.sendLeaveStatusNotification(
+        updated.employee.email,
+        `${updated.employee.firstName} ${updated.employee.lastName}`,
+        updated.leaveType.name,
+        format(updated.startDate, 'MMM dd, yyyy'),
+        format(updated.endDate, 'MMM dd, yyyy'),
+        'APPROVED',
+        updated.approver ? `${updated.approver.firstName} ${updated.approver.lastName}` : undefined
+      );
+    } catch (error) {
+      console.error('Failed to send leave approval notification:', error);
+      // Don't fail the approval if email fails
+    }
+
     return updated;
   },
 
@@ -186,7 +221,7 @@ export const leaveService = {
       throw new AppError(400, 'Leave request is not pending');
     }
 
-    return prisma.leaveRequest.update({
+    const updated = await prisma.leaveRequest.update({
       where: { id },
       data: {
         status: 'REJECTED',
@@ -198,6 +233,24 @@ export const leaveService = {
         approver: true,
       },
     });
+
+    // Send email notification to employee
+    try {
+      await emailService.sendLeaveStatusNotification(
+        updated.employee.email,
+        `${updated.employee.firstName} ${updated.employee.lastName}`,
+        updated.leaveType.name,
+        format(updated.startDate, 'MMM dd, yyyy'),
+        format(updated.endDate, 'MMM dd, yyyy'),
+        'REJECTED',
+        updated.approver ? `${updated.approver.firstName} ${updated.approver.lastName}` : undefined
+      );
+    } catch (error) {
+      console.error('Failed to send leave rejection notification:', error);
+      // Don't fail the rejection if email fails
+    }
+
+    return updated;
   },
 
   async cancel(id: string, employeeId: string): Promise<LeaveRequest> {

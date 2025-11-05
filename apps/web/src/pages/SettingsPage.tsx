@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { settingsApi, employeeApi } from '../lib/api';
+import { settingsApi, employeeApi, projectApi } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import type { Department, LeaveType, Shift, Holiday } from '../types';
 
-type Tab = 'departments' | 'leaveTypes' | 'shifts' | 'holidays';
+type Tab = 'departments' | 'leaveTypes' | 'shifts' | 'holidays' | 'projects' | 'smtp';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState<Tab>('departments');
@@ -58,6 +59,8 @@ const SettingsPage = () => {
     { id: 'leaveTypes' as Tab, label: 'Leave Types', icon: '🏖️' },
     { id: 'shifts' as Tab, label: 'Shifts', icon: '⏰' },
     { id: 'holidays' as Tab, label: 'Holidays', icon: '🎉' },
+    { id: 'projects' as Tab, label: 'Projects', icon: '📁' },
+    { id: 'smtp' as Tab, label: 'SMTP/Email', icon: '📧' },
   ];
 
   const renderContent = () => {
@@ -70,6 +73,10 @@ const SettingsPage = () => {
         return <ShiftsTab shifts={shifts || []} />;
       case 'holidays':
         return <HolidaysTab holidays={holidays || []} />;
+      case 'projects':
+        return <ProjectsTab />;
+      case 'smtp':
+        return <SMTPTab />;
       default:
         return null;
     }
@@ -722,6 +729,391 @@ const HolidaysTab = ({ holidays }: { holidays: Holiday[] }) => {
         </div>
       )}
     </>
+  );
+};
+
+// Projects Tab Component
+const ProjectsTab = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: projectsData, isLoading } = useQuery({
+    queryKey: ['settings', 'projects'],
+    queryFn: async () => {
+      const response = await projectApi.getAll({ page: 1, limit: 50 });
+      return response.data.data || [];
+    },
+  });
+
+  const projects = projectsData || [];
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      LEAD: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+      PLANNING: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
+      RUNNING: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200',
+      ON_HOLD: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200',
+      COMPLETED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200',
+      CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+  };
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Manage project settings and view project overview. Click on a project to view details.
+        </p>
+        <button onClick={() => navigate('/projects')} className="btn-primary">
+          Manage Projects →
+        </button>
+      </div>
+      
+      <div className="card">
+        <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Project Overview</h3>
+        {isLoading ? (
+          <div className="text-center py-8 text-gray-600 dark:text-gray-400">Loading projects...</div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+            <p className="mb-4">No projects found</p>
+            <button onClick={() => navigate('/projects')} className="btn-primary">
+              Create First Project
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b dark:border-gray-700">
+                  <th className="text-left py-3 px-4 dark:text-gray-300">Code</th>
+                  <th className="text-left py-3 px-4 dark:text-gray-300">Name</th>
+                  <th className="text-left py-3 px-4 dark:text-gray-300">Status</th>
+                  <th className="text-left py-3 px-4 dark:text-gray-300">Budget</th>
+                  <th className="text-left py-3 px-4 dark:text-gray-300">Manager</th>
+                  <th className="text-left py-3 px-4 dark:text-gray-300">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project: any) => (
+                  <tr key={project.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="py-3 px-4 dark:text-gray-200">{project.code}</td>
+                    <td className="py-3 px-4 dark:text-gray-200">{project.name}</td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(project.status)}`}>
+                        {project.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 dark:text-gray-200">
+                      {project.currency} {Number(project.budget).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 dark:text-gray-200">
+                      {project.manager ? `${project.manager.firstName} ${project.manager.lastName}` : 'N/A'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => navigate('/projects')}
+                        className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 text-sm"
+                      >
+                        View →
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Project Statistics */}
+      {projects.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <div className="card">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Total Projects</h3>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{projects.length}</p>
+          </div>
+          <div className="card">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Active</h3>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {projects.filter((p: any) => p.status === 'RUNNING').length}
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">On Hold</h3>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              {projects.filter((p: any) => p.status === 'ON_HOLD').length}
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Completed</h3>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {projects.filter((p: any) => p.status === 'COMPLETED').length}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// SMTP Configuration Tab Component
+const SMTPTab = () => {
+  const [formData, setFormData] = useState({
+    host: '',
+    port: 587,
+    secure: false,
+    user: '',
+    pass: '',
+    from: '',
+  });
+  const [testEmail, setTestEmail] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: smtpConfig, isLoading } = useQuery({
+    queryKey: ['settings', 'smtp'],
+    queryFn: async () => {
+      const response = await settingsApi.getSMTPConfig();
+      return response.data.data;
+    },
+  });
+
+  useEffect(() => {
+    if (smtpConfig) {
+      setFormData({
+        host: smtpConfig.host || '',
+        port: smtpConfig.port || 587,
+        secure: smtpConfig.secure || false,
+        user: smtpConfig.user || '',
+        pass: smtpConfig.pass === '••••••••' ? '' : (smtpConfig.pass || ''),
+        from: smtpConfig.from || '',
+      });
+    }
+  }, [smtpConfig]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: typeof formData) => settingsApi.updateSMTPConfig(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', 'smtp'] });
+      toast.success('SMTP configuration updated successfully');
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Failed to update SMTP configuration';
+      const errors = error.response?.data?.errors;
+      
+      if (errors && Array.isArray(errors)) {
+        // Show validation errors
+        const errorDetails = errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+        toast.error(`Validation error: ${errorDetails}`);
+      } else {
+        toast.error(errorMessage);
+      }
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: (email: string) => settingsApi.testSMTPConfig(email),
+    onSuccess: (response) => {
+      // Check both response.data.success and response.data.data.success for compatibility
+      const result = response.data.data || response.data;
+      if (result.success || response.data.success) {
+        toast.success(result.message || response.data.message || 'Test email sent successfully!');
+      } else {
+        toast.error(result.message || response.data.message || 'Failed to send test email');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to send test email');
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Prepare data - remove empty optional fields
+    const submitData: any = {
+      host: formData.host,
+      port: typeof formData.port === 'string' ? parseInt(formData.port, 10) : formData.port,
+      secure: formData.secure,
+      user: formData.user,
+      pass: formData.pass,
+    };
+    
+    // Only include 'from' if it's not empty
+    if (formData.from && formData.from.trim() !== '') {
+      submitData.from = formData.from;
+    }
+    
+    updateMutation.mutate(submitData);
+  };
+
+  const handleTest = () => {
+    if (!testEmail || !testEmail.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    testMutation.mutate(testEmail);
+  };
+
+  if (isLoading) {
+    return <div className="card"><p className="text-gray-600 dark:text-gray-300">Loading SMTP configuration...</p></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">SMTP Configuration</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
+          Configure your SMTP settings to enable email notifications for employees. Common SMTP providers:
+        </p>
+        
+        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <h3 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Common SMTP Settings:</h3>
+          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+            <li><strong>Gmail:</strong> smtp.gmail.com, Port: 587, Secure: false</li>
+            <li><strong>Outlook:</strong> smtp-mail.outlook.com, Port: 587, Secure: false</li>
+            <li><strong>Yahoo:</strong> smtp.mail.yahoo.com, Port: 587, Secure: false</li>
+            <li><strong>Custom:</strong> Contact your email provider for SMTP settings</li>
+          </ul>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                SMTP Host <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.host}
+                onChange={(e) => setFormData({ ...formData, host: e.target.value })}
+                required
+                className="input"
+                placeholder="smtp.gmail.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                SMTP Port <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                value={formData.port}
+                onChange={(e) => setFormData({ ...formData, port: parseInt(e.target.value) || 587 })}
+                required
+                className="input"
+                placeholder="587"
+                min="1"
+                max="65535"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                SMTP User (Email) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={formData.user}
+                onChange={(e) => setFormData({ ...formData, user: e.target.value })}
+                required
+                className="input"
+                placeholder="your-email@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                SMTP Password <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.pass}
+                  onChange={(e) => setFormData({ ...formData, pass: e.target.value })}
+                  required
+                  className="input pr-10"
+                  placeholder="Enter SMTP password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                From Email (Optional)
+              </label>
+              <input
+                type="email"
+                value={formData.from}
+                onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                className="input"
+                placeholder="noreply@example.com"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                If not provided, SMTP user email will be used
+              </p>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="secure"
+                checked={formData.secure}
+                onChange={(e) => setFormData({ ...formData, secure: e.target.checked })}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <label htmlFor="secure" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                Use Secure Connection (TLS/SSL)
+              </label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="btn-primary"
+            >
+              {updateMutation.isPending ? 'Saving...' : 'Save Configuration'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Test Email Section */}
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Test Email Configuration</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Send a test email to verify your SMTP configuration is working correctly.
+        </p>
+        
+        <div className="flex gap-4">
+          <input
+            type="email"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            className="input flex-1"
+            placeholder="Enter email address to test"
+          />
+          <button
+            type="button"
+            onClick={handleTest}
+            disabled={testMutation.isPending || !testEmail}
+            className="btn-secondary"
+          >
+            {testMutation.isPending ? 'Sending...' : 'Send Test Email'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

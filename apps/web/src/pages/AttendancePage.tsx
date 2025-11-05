@@ -137,19 +137,19 @@ const AttendancePage = () => {
           <p className="text-lg font-semibold mb-2">Today's Status</p>
           {todayLog?.clockIn ? (
             <div className="space-y-1">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 <span className="font-medium">Clock In:</span> {format(new Date(todayLog.clockIn), 'HH:mm:ss')}
               </p>
               {todayLog.clockOut ? (
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                   <span className="font-medium">Clock Out:</span> {format(new Date(todayLog.clockOut), 'HH:mm:ss')}
                 </p>
               ) : (
-                <p className="text-yellow-600 font-medium">You are currently clocked in</p>
+                <p className="text-yellow-600 dark:text-yellow-400 font-medium">You are currently clocked in</p>
               )}
             </div>
           ) : (
-            <p className="text-gray-600">You have not clocked in today</p>
+            <p className="text-gray-600 dark:text-gray-300">You have not clocked in today</p>
           )}
         </div>
       )}
@@ -157,20 +157,20 @@ const AttendancePage = () => {
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Total Hours</h3>
-          <p className="text-2xl font-bold text-primary-600">{stats.totalHours.toFixed(1)}</p>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Total Hours</h3>
+          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{stats.totalHours.toFixed(1)}</p>
         </div>
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Present Days</h3>
-          <p className="text-2xl font-bold text-green-600">{stats.presentDays}</p>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Present Days</h3>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.presentDays}</p>
         </div>
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Absent Days</h3>
-          <p className="text-2xl font-bold text-red-600">{stats.absentDays}</p>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Absent Days</h3>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.absentDays}</p>
         </div>
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Open Clocks</h3>
-          <p className="text-2xl font-bold text-yellow-600">{stats.openDays}</p>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Open Clocks</h3>
+          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.openDays}</p>
         </div>
       </div>
 
@@ -184,7 +184,7 @@ const AttendancePage = () => {
               <select
                 value={selectedEmployee}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                className="input"
               >
                 <option value="">All Employees</option>
                 {employees.map((emp: Employee) => (
@@ -195,22 +195,22 @@ const AttendancePage = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">From Date</label>
+              <label className="block text-sm font-medium mb-1 dark:text-gray-300">From Date</label>
               <input
                 type="date"
                 value={dateFilter.from}
                 onChange={(e) => setDateFilter({ ...dateFilter, from: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md"
+                className="input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">To Date</label>
+              <label className="block text-sm font-medium mb-1 dark:text-gray-300">To Date</label>
               <input
                 type="date"
                 value={dateFilter.to}
                 onChange={(e) => setDateFilter({ ...dateFilter, to: e.target.value })}
                 max={format(new Date(), 'yyyy-MM-dd')}
-                className="w-full px-3 py-2 border rounded-md"
+                className="input"
               />
             </div>
           </div>
@@ -252,7 +252,7 @@ const AttendancePage = () => {
           {isEmployee ? 'My Attendance History' : 'Attendance History'}
         </h2>
         {isLoading ? (
-          <div className="text-center py-8 text-gray-600">Loading...</div>
+          <div className="text-center py-8 text-gray-600 dark:text-gray-300">Loading...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -271,7 +271,7 @@ const AttendancePage = () => {
                   filteredHistory.map((log: AttendanceLog) => {
                     const status = getStatus(log);
                     return (
-                      <tr key={log.id} className="border-b hover:bg-gray-50">
+                      <tr key={log.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                         {isManager && (
                           <td className="py-3 px-4">
                             {employees.find((e: Employee) => e.id === log.employeeId) 
@@ -297,7 +297,7 @@ const AttendancePage = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={isManager ? 6 : 5} className="text-center py-8 text-gray-600">
+                    <td colSpan={isManager ? 6 : 5} className="text-center py-8 text-gray-600 dark:text-gray-400">
                       No attendance records found
                     </td>
                   </tr>

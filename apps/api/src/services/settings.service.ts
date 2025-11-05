@@ -243,5 +243,94 @@ export const settingsService = {
 
     return prisma.holiday.delete({ where: { id } });
   },
+
+  // ===== SMTP CONFIGURATION =====
+  async getSMTPConfig() {
+    try {
+      const settings = await prisma.systemSettings.findUnique({
+        where: { key: 'smtp' },
+      });
+
+      if (!settings) {
+        return null;
+      }
+
+      // Mask password for security
+      const config = settings.value as any;
+      if (config && config.pass) {
+        return {
+          ...config,
+          pass: config.pass ? '••••••••' : undefined,
+        };
+      }
+
+      return config;
+    } catch (error: any) {
+      // If table doesn't exist yet, return null
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        console.log('SystemSettings table not found');
+        return null;
+      }
+      throw error;
+    }
+  },
+
+  async updateSMTPConfig(data: {
+    host: string;
+    port: number;
+    secure?: boolean;
+    user: string;
+    pass: string;
+    from?: string;
+  }) {
+    try {
+      // Upsert SMTP configuration
+      const settings = await prisma.systemSettings.upsert({
+        where: { key: 'smtp' },
+        update: {
+          value: {
+            host: data.host,
+            port: data.port,
+            secure: data.secure || data.port === 465,
+            user: data.user,
+            pass: data.pass,
+            from: data.from || data.user,
+          },
+        },
+        create: {
+          key: 'smtp',
+          value: {
+            host: data.host,
+            port: data.port,
+            secure: data.secure || data.port === 465,
+            user: data.user,
+            pass: data.pass,
+            from: data.from || data.user,
+          },
+        },
+      });
+
+      // Return masked password
+      const config = settings.value as any;
+      return {
+        ...config,
+        pass: config.pass ? '••••••••' : undefined,
+      };
+    } catch (error: any) {
+      console.error('Error updating SMTP config:', error);
+      
+      // If table doesn't exist, provide helpful error message
+      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+        throw new AppError(500, 'SystemSettings table not found. Please run database migrations: npx prisma migrate deploy');
+      }
+      
+      // Handle Prisma errors
+      if (error?.code) {
+        throw new AppError(500, `Database error: ${error.message || 'Failed to update SMTP configuration'}`);
+      }
+      
+      throw error;
+    }
+  },
 };
 
