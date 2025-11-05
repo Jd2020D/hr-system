@@ -29,21 +29,21 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 dark:from-primary-800 dark:to-primary-900">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-lg shadow-xl p-8">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl p-8 transition-colors">
           {/* Logo */}
           <div className="flex justify-center mb-6">
             <Logo size="lg" showText={true} onClick={() => {}} />
           </div>
           
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
+          <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-100 mb-8">
             HR Management System
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <input
@@ -56,7 +56,7 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -69,7 +69,7 @@ const LoginPage = () => {
             </div>
 
             {loginMutation.isError && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <div className="bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded">
                 Login failed. Please check your credentials.
               </div>
             )}
@@ -83,7 +83,7 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
             <p>Demo credentials:</p>
             <p className="mt-2">
               <strong>Admin:</strong> admin@hrsystem.com / Admin@123

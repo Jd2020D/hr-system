@@ -10,6 +10,12 @@ router.use(authenticate);
 
 // Everyone can view employees
 router.get('/', employeeController.findAll);
+
+// Self-service endpoints for employees to manage their own profile (must come before /:id route)
+router.get('/me/profile', employeeController.getMyProfile);
+router.put('/me/profile', employeeController.updateMyProfile);
+
+// Get employee by ID
 router.get('/:id', employeeController.findById);
 
 // Only HR and Admin can manage employees

@@ -75,12 +75,17 @@ export const authApi = {
 
 export const employeeApi = {
   getAll: (params?: any) =>
-    api.get<ApiResponse & PaginatedResponse<Employee>>("/employees", {
-      params,
-    }),
-
-  getById: (id: string) => api.get<ApiResponse<Employee>>(`/employees/${id}`),
-
+    api.get<ApiResponse & PaginatedResponse<Employee>>('/employees', { params }),
+  
+  getById: (id: string) =>
+    api.get<ApiResponse<Employee>>(`/employees/${id}`),
+  
+  getMyProfile: () =>
+    api.get<ApiResponse<Employee>>('/employees/me/profile'),
+  
+  updateMyProfile: (data: Partial<Employee>) =>
+    api.put<ApiResponse<Employee>>('/employees/me/profile', data),
+  
   create: (data: Partial<Employee>) =>
     api.post<ApiResponse<Employee>>("/employees", data),
 
@@ -210,6 +215,23 @@ export const settingsApi = {
 
   deleteHoliday: (id: string) =>
     api.delete<ApiResponse>(`/settings/holidays/${id}`),
+  
+  // SMTP Configuration
+  getSMTPConfig: () =>
+    api.get<ApiResponse<any>>('/settings/smtp'),
+  
+  updateSMTPConfig: (data: {
+    host: string;
+    port: number;
+    secure?: boolean;
+    user: string;
+    pass: string;
+    from?: string;
+  }) =>
+    api.put<ApiResponse<any>>('/settings/smtp', data),
+  
+  testSMTPConfig: (email: string) =>
+    api.post<ApiResponse<{ success: boolean; message: string }>>('/settings/smtp/test', { email }),
 };
 
 export const projectApi = {

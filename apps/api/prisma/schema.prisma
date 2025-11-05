@@ -477,3 +477,18 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// ============================================================================
+// SYSTEM SETTINGS
+// ============================================================================
+
+model SystemSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique @db.VarChar(100)
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([key])
+  @@map("system_settings")
+}
+
